@@ -44,6 +44,35 @@ export default {
                 this.$refs.fileInput.click();
             }
         },
+        async startLiveCamera() {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const hasVideoDevice = devices.some(device => device.kind === 'videoinput');
+                if (!hasVideoDevice) {
+                    throw new Error('No video input device found.');
+                }
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                this.renderLiveCamera(stream);
+            } catch (error) {
+                console.error('Error accessing camera:', error);
+                alert('Error accessing camera. Please make sure your camera is connected and accessible.');
+            }
+        },
+        renderLiveCamera(stream) {
+            this.stopVideo();
+            const video = this.$refs.videoPlayer;
+            video.srcObject = stream;
+            video.onloadedmetadata = () => {
+                this.canvas.width = video.videoWidth;
+                this.canvas.height = video.videoHeight;
+                video.play();
+                const drawFrame = () => {
+                    this.ctx.drawImage(video, 0, 0);
+                    requestAnimationFrame(drawFrame);
+                };
+                drawFrame();
+            };
+        },
         handleFileInput(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -84,29 +113,6 @@ export default {
                 };
                 drawFrame();
             };
-        },
-        startLiveCamera() {
-            navigator.mediaDevices.getUserMedia({ video: true })
-                .then(stream => {
-                    this.stopVideo();
-                    const video = this.$refs.videoPlayer;
-                    video.srcObject = stream;
-                    video.onloadedmetadata = () => {
-                        this.canvas.width = video.videoWidth;
-                        this.canvas.height = video.videoHeight;
-                        video.play();
-                        const drawFrame = () => {
-                            this.ctx.drawImage(video, 0, 0);
-                            requestAnimationFrame(drawFrame);
-                        };
-                        drawFrame();
-                    };
-                    this.videoStream = stream;
-                })
-                .catch(error => {
-                    console.error('Error accessing camera:', error);
-                    alert('Error accessing camera. Please make sure your camera is connected and accessible.');
-                });
         },
         stopVideo() {
             const video = this.$refs.videoPlayer;
