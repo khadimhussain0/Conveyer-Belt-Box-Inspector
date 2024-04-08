@@ -26,7 +26,7 @@ export default {
   data() {
     return {
       numberOfBoxesDetected: 0,
-      currentLine: '',
+      currentLine: '1',
       startTime: new Date(),
       timer: null
     };
